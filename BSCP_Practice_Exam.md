@@ -138,7 +138,7 @@ sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&s
 
 - Decode này bằng **Decoder** của Burp Suite ta biết được quá trình encode của cookie sau khi serialize là : gzip encode -->  base64 encode --> url encode:
 
-![image-20211214123526651](https://user-images.githubusercontent.com/61876488/146225700-4171ece7-00d7-48dd-b133-50f181eb12af.png))
+![image-20211214123526651](https://user-images.githubusercontent.com/61876488/146225700-4171ece7-00d7-48dd-b133-50f181eb12af.png)
 
 - Trong plain text trên có đoạn `lab.display.admin.prefs.JavaPrefsCookieStrategy`. Nhiều khả năng web app này sẽ bị dính vuln **java deserialization** tại cookie  `admin-prefs` này.
 
