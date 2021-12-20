@@ -1,6 +1,6 @@
 # Write-up for Burp Suite Certified Practitioner Practice Exam
 
-Author: `HoangNCH`
+Author: `Antoine Nguyen`
 
 ### 1. Khai thác DOM-based XSS tại chức năng "Search the blog":
 
