@@ -61,7 +61,7 @@ function search(path) {
 
 ![image-20211213230124046](https://user-images.githubusercontent.com/61876488/146169515-c176c379-172f-48b5-abbf-ce883c7251fb.png)
 
-- Nhưng chúng ta có thể url encode các dấu chấm thành `%2e` (CVE-2021-41773). Thử payload `"+(location="https://www%2ew3schools%2ecom/?a=1")}//`:
+- Nhưng chúng ta có thể url encode các dấu chấm thành `%2e` (khá giống CVE-2021-41773 :D). Thử payload `"+(location="https://www%2ew3schools%2ecom/?a=1")}//`:
 
 ![image-20211213230633913](https://user-images.githubusercontent.com/61876488/146169608-19a26787-cde1-4ea3-9d6d-4f881f86396b.png)
 
